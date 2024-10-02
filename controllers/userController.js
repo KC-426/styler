@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 dotenv.config({ path: "config/.env" });
 import nodemailer from "nodemailer";
 import { uploadUserProfileImageToFirebaseStorage } from "../utils/helperFunctions.js";
+import userValidatorSchema from "../validator/userValidator.js";
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -20,6 +21,11 @@ const generateOtp = () => {
 
 export async function userSignup(req, res) {
   try {
+    const { error } = userValidatorSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ message: error.details[0].message });
+    }
+
     const { email, password } = req.body;
 
     const findExistingUser = await User.findOne({ email });
@@ -55,6 +61,11 @@ export async function userSignup(req, res) {
 
 export async function userLogin(req, res) {
   try {
+    const { error } = userValidatorSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ message: error.details[0].message });
+    }
+
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
@@ -107,10 +118,10 @@ export async function completeUserProfile(req, res) {
       country,
     } = req.body;
 
-   const imageFile = req.file
-   if(!imageFile){
-    return res.status(400).json({message: "Image is required !"})
-   }
+    const imageFile = req.file;
+    if (!imageFile) {
+      return res.status(400).json({ message: "Image is required !" });
+    }
 
     const user = await User.findById(userId);
     if (!user) {
@@ -123,7 +134,7 @@ export async function completeUserProfile(req, res) {
         .json({ message: "Please fill the correct email !" });
     }
 
-    const imageUrl = await uploadUserProfileImageToFirebaseStorage(req, res)
+    const imageUrl = await uploadUserProfileImageToFirebaseStorage(req, res);
 
     user.prefix = prefix;
     user.fullname = fullname;
@@ -138,7 +149,7 @@ export async function completeUserProfile(req, res) {
     user.state = state;
     user.pincode = pincode;
     user.country = country;
-    user.image = imageUrl
+    user.image = imageUrl;
 
     const otp = generateOtp();
 
@@ -190,7 +201,6 @@ export async function verifyEmail(req, res) {
     return res.status(500).json({ message: "Internal Server Error !" });
   }
 }
-
 
 export async function sendOtp(req, res) {
   const { userId } = req.params;
