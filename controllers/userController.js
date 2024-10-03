@@ -102,6 +102,12 @@ export async function userLogin(req, res) {
 export async function completeUserProfile(req, res) {
   const { userId } = req.params;
   try {
+
+    const { error } = userValidatorSchema.validate(req.body)
+    if(error) {
+      return res.status(400).json({ message: error.details[0].message })
+    }
+
     const {
       prefix,
       fullname,
@@ -178,6 +184,12 @@ export async function completeUserProfile(req, res) {
 export async function verifyEmail(req, res) {
   const { userId } = req.params;
   try {
+
+    const { error } = userValidatorSchema.validate(req.body)
+    if(error) {
+      return res.status(400).json({ message: error.details[0].message })
+    }
+
     const { otp } = req.body;
 
     const user = await User.findById(userId);
@@ -205,20 +217,7 @@ export async function verifyEmail(req, res) {
 export async function sendOtp(req, res) {
   const { userId } = req.params;
   try {
-    const { otp } = req.body;
-
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(400).json({ message: "User not found !" });
-    }
-
-    if (otp !== user.otp) {
-      return res.status(400).json({ message: "Invalid otp !" });
-    }
-
-    user.otp = null;
-
-    await user.save();
+ 
 
     return res
       .status(200)
