@@ -1,7 +1,7 @@
 import express from "express";
 import multer from "multer";
 
-import userAuth from "../middleware/auth.js";
+import {userAuth} from "../middleware/auth.js";
 import { addBlog, getBlogs } from "../controllers/blogsController.js";
 
 const storage = multer.memoryStorage();

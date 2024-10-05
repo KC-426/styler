@@ -28,17 +28,23 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ["Male", "Female", "Others"],
   },
-  image: {
-    name: {
-      type: String,
-    },
-    path: {
-      type: String,
-    },
-    url: {
-      type: String,
-    },
+  // image: {
+  //   name: {
+  //     type: String,
+  //   },
+  //   path: {
+  //     type: String,
+  //   },
+  //   url: {
+  //     type: String,
+  //   },
+  // },
+
+  avatar: {
+    type: String,
+    required: false,
   },
+
   address1: {
     type: String,
   },
@@ -63,12 +69,7 @@ const userSchema = new mongoose.Schema({
   otp: {
     type: String,
   },
-  newPassword: {
-    type: String,
-  },
-  confirmPassword: {
-    type: String,
-  },
+
 }, { timestamps: true });
 
 export default mongoose.model("User", userSchema);

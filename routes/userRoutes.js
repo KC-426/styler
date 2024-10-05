@@ -1,9 +1,11 @@
 import express from "express";
 import multer from "multer";
 
-import userAuth from "../middleware/auth.js";
+import {userAuth} from "../middleware/auth.js";
 import {
+  changepassword,
   completeUserProfile,
+  sendOtp,
   userLogin,
   userSignup,
   verifyEmail,
@@ -22,6 +24,10 @@ router.route("/user/login").post(userLogin);
 router
   .route("/complete/user/profile/:userId")
   .put(upload.single("image"), userAuth, completeUserProfile);
-router.route("/verify/email/:userId").post(userAuth, verifyEmail);
+router.route("/verify/email").post(userAuth, verifyEmail);
+router.route("/send/otp").post(userAuth, sendOtp);
+router.route("/change/password").patch(userAuth, changepassword);
+
+
 
 export default router;

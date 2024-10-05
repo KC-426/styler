@@ -5,7 +5,7 @@ const blogsValidatorSchema = Joi.object({
         "string.empty": "Title is required",
         "string.title": "Invalid title format"
     }),
-    descriptio: Joi.string().required().messages({
+    description: Joi.string().required().messages({
         "string.empty": "Description is required",
         "string.description": "Invalid description format"
     })

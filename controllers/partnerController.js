@@ -1,11 +1,11 @@
-import User from "../models/userModel.js";
+import Partner from "../models/partnerModel.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 dotenv.config({ path: "config/.env" });
 import nodemailer from "nodemailer";
 import { uploadUserProfileImageToFirebaseStorage } from "../utils/helperFunctions.js";
-import userValidatorSchema from "../validator/userValidator.js";
+import partnerValidatorSchema from "../validator/partnerValidator.js";
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -19,20 +19,20 @@ const generateOtp = () => {
   return Math.floor(100000 + Math.random() * 900000);
 };
 
-export async function userSignup(req, res) {
+export async function partnerSignup(req, res) {
   try {
-    const { error } = userValidatorSchema.validate(req.body);
+    const { error } = partnerValidatorSchema.validate(req.body);
     if (error) {
       return res.status(400).json({ message: error.details[0].message });
     }
 
     const { email, password } = req.body;
 
-    const findExistingUser = await User.findOne({ email });
-    if (findExistingUser) {
+    const findExistingPartner = await Partner.findOne({ email });
+    if (findExistingPartner) {
       return res
         .status(400)
-        .json({ message: "User already exist, please login !" });
+        .json({ message: "Partner already exist, please login !" });
     }
 
     const passwordRegex =
@@ -46,42 +46,42 @@ export async function userSignup(req, res) {
 
     const hashedPwd = await bcrypt.hash(password, 12);
 
-    const user = new User({
+    const partner = new Partner({
       email,
       password: hashedPwd,
     });
 
-    await user.save();
-    return res.status(201).json({ message: "Sign up successful !", user });
+    await partner.save();
+    return res.status(201).json({ message: "Sign up successful !", partner });
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: "Internal Server Error !" });
   }
 }
 
-export async function userLogin(req, res) {
+export async function partnerLogin(req, res) {
   try {
-    const { error } = userValidatorSchema.validate(req.body);
+    const { error } = partnerValidatorSchema.validate(req.body);
     if (error) {
       return res.status(400).json({ message: error.details[0].message });
     }
 
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
-    if (!user) {
+    const partner = await Partner.findOne({ email });
+    if (!partner) {
       return res
         .status(400)
-        .json({ message: "No user found, please signup !" });
+        .json({ message: "No partner found, please signup !" });
     }
 
-    const isMatchPassword = await bcrypt.compare(password, user.password);
+    const isMatchPassword = await bcrypt.compare(password, partner.password);
     if (!isMatchPassword) {
       return res.status(400).json({ message: "Incorrect password !" });
     }
 
     const token = jwt.sign(
-      { _id: user._id, email: user.email },
+      { _id: partner._id, email: partner.email },
       process.env.SECRET_KEY,
       { expiresIn: "1h" }
     );
@@ -99,14 +99,14 @@ export async function userLogin(req, res) {
   }
 }
 
-export async function completeUserProfile(req, res) {
-  const { userId } = req.params;
+export async function completePartnerProfile(req, res) {
+  const { partnerId } = req.params;
   try {
     const trimmedBody = Object.fromEntries(
       Object.entries(req.body).map(([key, value]) => [key.trim(), value])
     );
 
-    const { error } = userValidatorSchema.validate(trimmedBody);
+    const { error } = partnerValidatorSchema.validate(trimmedBody);
     if (error) {
       return res.status(400).json({ message: error.details[0].message });
     }
@@ -127,38 +127,38 @@ export async function completeUserProfile(req, res) {
       country,
     } = trimmedBody; 
 
-    const imageFile = req.file;
-    if (!imageFile) {
-      return res.status(400).json({ message: "Image is required !" });
+    // const imageFile = req.file;
+    // if (!imageFile) {
+    //   return res.status(400).json({ message: "Image is required !" });
+    // }
+
+    const partner = await Partner.findById(partnerId);
+    if (!partner) {
+      return res.status(400).json({ message: "partner not found !" });
     }
 
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(400).json({ message: "User not found !" });
-    }
-
-    if (email !== user.email) {
+    if (email !== partner.email) {
       return res
         .status(400)
         .json({ message: "Please fill the correct email !" });
     }
 
-    const imageUrl = await uploadUserProfileImageToFirebaseStorage(req, res);
+    // const imageUrl = await uploadUserProfileImageToFirebaseStorage(req, res);
 
-    user.prefix = prefix;
-    user.fullname = fullname;
-    user.email = email;
-    user.dob = dob;
-    user.phone = phone;
-    user.gender = gender;
-    user.address1 = address1;
-    user.address2 = address2;
-    user.landmark = landmark;
-    user.city = city; 
-    user.state = state;
-    user.pincode = pincode;
-    user.country = country;
-    user.image = imageUrl;
+    partner.prefix = prefix;
+    partner.fullname = fullname;
+    partner.email = email;
+    partner.dob = dob;
+    partner.phone = phone;
+    partner.gender = gender;
+    partner.address1 = address1;
+    partner.address2 = address2;
+    partner.landmark = landmark;
+    partner.city = city; 
+    partner.state = state;
+    partner.pincode = pincode;
+    partner.country = country;
+    // partner.image = imageUrl;
 
     const otp = generateOtp();
 
@@ -171,14 +171,14 @@ export async function completeUserProfile(req, res) {
 
     await transporter.sendMail(mailOptions);
 
-    user.otp = otp;
+    partner.otp = otp;
 
-    await user.save();
-    console.log("User saved successfully:", user); 
+    await partner.save();
+    console.log("partner saved successfully:", partner); 
 
     return res
       .status(200)
-      .json({ message: "Profile completed successfully !", user });
+      .json({ message: "Profile completed successfully !", partner });
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: "Internal Server Error !" });
@@ -188,20 +188,20 @@ export async function completeUserProfile(req, res) {
 
 export async function verifyEmail(req, res) {
   try {
-    const { error } = userValidatorSchema.validate(req.body);
+    const { error } = partnerValidatorSchema.validate(req.body);
     if (error) {
       return res.status(400).json({ message: error.details[0].message });
     }
 
     const { otp } = req.body;
-    const user = req.user;
+    const partner = req.partner;
 
-    if (otp !== user.otp) {
+    if (otp !== partner.otp) {
       return res.status(400).json({ message: "Invalid OTP!" });
     }
 
-    user.otp = null; 
-    await user.save();
+    partner.otp = null; 
+    await partner.save();
 
     return res.status(200).json({ message: "Email verification successful!" });
   } catch (err) {
@@ -211,13 +211,15 @@ export async function verifyEmail(req, res) {
 }
 
 export async function sendOtp(req, res) {
+  console.log("data")
   try {
-    const user = req.user;
+    const partner = req.partner;
+    console.log(partner)
 
     const otp = generateOtp();
 
     const mailOptions = {
-      to: user.email,
+      to: partner.email,
       from: process.env.GMAIL_USER,
       subject: "Email verification code !",
       text: `Please verify your email, Otp for verification is ${otp}`,
@@ -225,12 +227,12 @@ export async function sendOtp(req, res) {
 
     await transporter.sendMail(mailOptions);
 
-    user.otp = otp;
-    await user.save();
+    partner.otp = otp;
+    await partner.save();
 
     return res
       .status(200)
-      .json({ message: "Otp sent successfully on your mail !", user });
+      .json({ message: "Otp sent successfully on your mail !", partner });
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: "Internal Server Error !" });
@@ -239,8 +241,8 @@ export async function sendOtp(req, res) {
 
 export async function changepassword(req, res) {
   try {
-    const user = req.user;
-    console.log(user)
+    const partner = req.partner;
+    console.log(partner)
 
     const { newPassword, confirmpassword } = req.body;
 
@@ -261,13 +263,13 @@ export async function changepassword(req, res) {
 
     const hashedPwd = await bcrypt.hash(newPassword, 12);
 
-    user.password = hashedPwd;
+    partner.password = hashedPwd;
 
-    await user.save();
+    await partner.save();
 
     return res
       .status(200)
-      .json({ message: "Password Changed successfully !", user });
+      .json({ message: "Password Changed successfully !", partner });
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: "Internal Server Error !" });

@@ -1,57 +1,67 @@
 import Joi from "joi";
 
 const userValidatorSchema = Joi.object({
-  email: Joi.string().email().required().messages({
-    "string.empty": "Email is required",
+  email: Joi.string().optional().allow('').messages({
     "string.email": "Invalid email format",
   }),
 
-  fullname: Joi.string().required().messages({
-    "string.empty": "Fullname is required",
+  prefix: Joi.string().valid("Mr.", "Miss", "Mrs.").optional().messages({
+    "any.only": "Prefix must be one of 'Mr.', 'Miss', or 'Mrs.'",
   }),
 
-  dob: Joi.date().required().messages({
-    "date.empty": "dob is required",
-    "date.base": "Invalid dob format",
+  gender: Joi.string().valid("Male", "Female", "Others").optional().messages({
+    "any.only": "Gender must be one of 'Male', 'Female', or 'Others'",
   }),
 
-  phone: Joi.string().pattern(/^[0-9]{10}$/).required().messages({
-    "string.empty": "Phone number is required",
+  fullname: Joi.string().optional().allow('').messages({
+    "string.empty": "Full name cannot be empty",
+  }),
+
+  dob: Joi.date().optional().messages({
+    "date.base": "Invalid date format",
+  }),
+
+  phone: Joi.string().pattern(/^[0-9]{10}$/).optional().messages({
     "string.pattern.base": "Invalid phone number format, it must be 10 digits",
   }),
 
-  address1: Joi.string().required().messages({
-    "string.empty": "address line 1 is required",
+  address1: Joi.string().optional().allow('').messages({
+    "string.base": "Invalid format for address line 1",
   }),
 
   address2: Joi.string().optional().allow('').messages({
     "string.base": "Invalid format for address line 2",
   }),
 
-  landmark: Joi.string().required().messages({
-    "string.empty": "landmark is required",  }),
-
-  city: Joi.string().required().messages({
-    "string.empty": "city is required",
+  landmark: Joi.string().optional().allow('').messages({
+    "string.base": "Invalid format for landmark",
   }),
 
-  state: Joi.string().required().messages({
-    "string.empty": "state is required",
+  city: Joi.string().optional().allow('').messages({
+    "string.empty": "City is required",
   }),
 
-  pincode: Joi.string().pattern(/^[0-9]{6}$/).required().messages({
-    "string.empty": "Pincode is required",
+  state: Joi.string().optional().allow('').messages({
+    "string.empty": "State is required",
+  }),
+
+  pincode: Joi.string().pattern(/^[0-9]{6}$/).optional().messages({
     "string.pattern.base": "Invalid pincode format, it must be 6 digits",
   }),
 
-  country: Joi.string().required().messages({
-    "string.empty": "country is required",
+  country: Joi.string().optional().allow('').messages({
+    "string.empty": "Country is required",
   }),
 
-  otp: Joi.string().pattern(/^[0-9]{6}$/).required().messages({
+  otp: Joi.string().pattern(/^[0-9]{6}$/).optional().messages({
     "string.empty": "OTP is required",
     "string.pattern.base": "Invalid OTP format, it must be 6 digits",
+  }),
+
+  password: Joi.string().optional().allow('').messages({
+    "string.password": "Invalid password format",
   }),
 });
 
 export default userValidatorSchema;
+
