@@ -6,6 +6,7 @@ dotenv.config({ path: "config/.env" });
 import nodemailer from "nodemailer";
 import { uploadUserProfileImageToFirebaseStorage } from "../utils/helperFunctions.js";
 import userValidatorSchema from "../validator/userValidator.js";
+import Otp from "../models/otpModel.js";
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -121,16 +122,16 @@ export async function completeUserProfile(req, res) {
       address1,
       address2,
       landmark,
-      city, 
+      city,
       state,
       pincode,
       country,
-    } = trimmedBody; 
+    } = trimmedBody;
 
-    const imageFile = req.file;
-    if (!imageFile) {
-      return res.status(400).json({ message: "Image is required !" });
-    }
+    // const imageFile = req.file;
+    // if (!imageFile) {
+    //   return res.status(400).json({ message: "Image is required !" });
+    // }
 
     const user = await User.findById(userId);
     if (!user) {
@@ -143,7 +144,7 @@ export async function completeUserProfile(req, res) {
         .json({ message: "Please fill the correct email !" });
     }
 
-    const imageUrl = await uploadUserProfileImageToFirebaseStorage(req, res);
+    // const imageUrl = await uploadUserProfileImageToFirebaseStorage(req, res);
 
     user.prefix = prefix;
     user.fullname = fullname;
@@ -154,11 +155,11 @@ export async function completeUserProfile(req, res) {
     user.address1 = address1;
     user.address2 = address2;
     user.landmark = landmark;
-    user.city = city; 
+    user.city = city;
     user.state = state;
     user.pincode = pincode;
     user.country = country;
-    user.image = imageUrl;
+    // user.image = imageUrl;
 
     const otp = generateOtp();
 
@@ -171,10 +172,13 @@ export async function completeUserProfile(req, res) {
 
     await transporter.sendMail(mailOptions);
 
-    user.otp = otp;
-
+    const otpRecord = new Otp({
+      otp,
+      userId: user._id,
+    });
+    await otpRecord.save();
     await user.save();
-    console.log("User saved successfully:", user); 
+    console.log("User saved successfully:", user);
 
     return res
       .status(200)
@@ -184,7 +188,6 @@ export async function completeUserProfile(req, res) {
     return res.status(500).json({ message: "Internal Server Error !" });
   }
 }
-
 
 export async function verifyEmail(req, res) {
   try {
@@ -196,12 +199,18 @@ export async function verifyEmail(req, res) {
     const { otp } = req.body;
     const user = req.user;
 
-    if (otp !== user.otp) {
+    const dbOtp = await Otp.findOne({ userId: user._id });
+
+    if (!dbOtp) {
+      return res.status(400).json({ message: "OTP not found or expired!" });
+    }
+
+    if (otp !== dbOtp.otp) {
       return res.status(400).json({ message: "Invalid OTP!" });
     }
 
-    user.otp = null; 
     await user.save();
+    await Otp.deleteOne({ userId: user._id });
 
     return res.status(200).json({ message: "Email verification successful!" });
   } catch (err) {
@@ -225,12 +234,15 @@ export async function sendOtp(req, res) {
 
     await transporter.sendMail(mailOptions);
 
-    user.otp = otp;
-    await user.save();
+    const otpRecord = new Otp({
+      otp,
+      userId: user._id,
+    });
+    await otpRecord.save();
 
     return res
       .status(200)
-      .json({ message: "Otp sent successfully on your mail !", user });
+      .json({ message: "Otp sent successfully on your email !", otpRecord });
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: "Internal Server Error !" });
@@ -240,7 +252,7 @@ export async function sendOtp(req, res) {
 export async function changepassword(req, res) {
   try {
     const user = req.user;
-    console.log(user)
+    console.log(user);
 
     const { newPassword, confirmpassword } = req.body;
 

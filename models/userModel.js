@@ -66,9 +66,9 @@ const userSchema = new mongoose.Schema({
   country: {
     type: String,
   },
-  otp: {
-    type: String,
-  },
+  // otp: {
+  //   type: String,
+  // },
 
 }, { timestamps: true });
 

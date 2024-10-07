@@ -6,6 +6,7 @@ dotenv.config({ path: "config/.env" });
 import nodemailer from "nodemailer";
 import { uploadUserProfileImageToFirebaseStorage } from "../utils/helperFunctions.js";
 import partnerValidatorSchema from "../validator/partnerValidator.js";
+import Otp from '../models/otpModel.js'
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -171,10 +172,13 @@ export async function completePartnerProfile(req, res) {
 
     await transporter.sendMail(mailOptions);
 
-    partner.otp = otp;
+    const otpRecord = new Otp({
+      otp, 
+      partnerId: partner._id
+    })
+    await otpRecord.save()
 
     await partner.save();
-    console.log("partner saved successfully:", partner); 
 
     return res
       .status(200)
@@ -196,12 +200,19 @@ export async function verifyEmail(req, res) {
     const { otp } = req.body;
     const partner = req.partner;
 
-    if (otp !== partner.otp) {
+    const dbOtp = await Otp.findOne({ partnerId: partner._id})
+
+    if (!dbOtp) {
+      return res.status(400).json({ message: "OTP not found or expired!" });
+    }
+
+
+    if (otp !== dbOtp.otp) {
       return res.status(400).json({ message: "Invalid OTP!" });
     }
 
-    partner.otp = null; 
     await partner.save();
+    await Otp.deleteOne({ partnerId: partner._id})
 
     return res.status(200).json({ message: "Email verification successful!" });
   } catch (err) {
@@ -211,7 +222,6 @@ export async function verifyEmail(req, res) {
 }
 
 export async function sendOtp(req, res) {
-  console.log("data")
   try {
     const partner = req.partner;
     console.log(partner)
@@ -227,12 +237,15 @@ export async function sendOtp(req, res) {
 
     await transporter.sendMail(mailOptions);
 
-    partner.otp = otp;
-    await partner.save();
+    const otpRecord = new Otp({
+      otp,
+      partnerId: partner._id,
+    });
+    await otpRecord.save();
 
     return res
       .status(200)
-      .json({ message: "Otp sent successfully on your mail !", partner });
+      .json({ message: "Otp sent successfully on your mail !", otpRecord });
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: "Internal Server Error !" });

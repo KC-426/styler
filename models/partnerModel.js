@@ -67,12 +67,14 @@ const partnerSchema = new mongoose.Schema({
   otp: {
     type: String,
   },
-  // newPassword: {
-  //   type: String,
-  // },
-  // confirmPassword: {
-  //   type: String,
-  // },
+  isKycVerified: {
+    type: Boolean,
+    default: false,
+  },
+  isMembership: {
+    type: Boolean,
+    default: false,
+  },
 }, { timestamps: true });
 
 export default mongoose.model("Partner", partnerSchema);

@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const kycSchema = new mongoose.Schema({
   partnerDocId: {
     type: String,
-    required: true,
+    // required: true,
   },
   nameOnDocument: {
     type: String,
@@ -19,11 +19,11 @@ const kycSchema = new mongoose.Schema({
   },
   frontImage: {
     type: String,
-    required: true,
+    // required: true,
   },
   backImage: {
     type: String,
-    required: true,
+    // required: true,
   },
   status: {
     type: String,
@@ -37,7 +37,7 @@ const kycSchema = new mongoose.Schema({
     type: Date,
     default: Date.now(),
   },
-});
+}, {timestamps: true});
 
 export default mongoose.model("KYC", kycSchema);
 
