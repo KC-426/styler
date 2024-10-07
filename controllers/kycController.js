@@ -1,6 +1,7 @@
 import Partner from "../models/partnerModel.js";
 import KYC from "../models/kycModel.js";
 import { kycSchemaValidator } from "../validator/partnerKycValidator.js";
+import { exist } from "joi";
 
 export const uploadKyc = async (req, res) => {
   try {
@@ -82,7 +83,9 @@ export const fetchPartnerKyc = async (req, res) => {
   try {
     const partner = req.partner;
     console.log(partner);
-    const response = await KYC.find({ partnerDocId: partner._id }).sort({ createdAt: 1 });
+    const response = await KYC.find({ partnerDocId: partner._id }).sort({
+      createdAt: 1,
+    });
     if (!response) {
       return res.status(400).json({
         success: false,
@@ -123,9 +126,54 @@ export const getKycDetails = async (req, res) => {
 };
 
 export const kycVerification = async (req, res) => {
-  const { kycDocId } = req.params;
   try {
+    const partner = req.partner;
+    const { error } = kycSchemaValidator.validate(req.body);
 
+    if (error) {
+      return res.status(400).json({ message: error.details[0].message });
+    }
+
+    const { kycDocId, isVerified, rejectionReason } = req.body;
+
+    const existingKycEntry = await KYC.findOne({ _id: kycDocId });
+
+    if (!existingKycEntry) {
+      return res
+        .status(400)
+        .json({ success: false, message: "KYC entry not found !" });
+    }
+
+    if (isVerified) {
+      existingKycEntry.status = "Verified";
+      existingKycEntry.rejectionReason = null;
+      await existingKycEntry.save();
+
+      await Partner.findOneAndUpdate(
+        { _id: pather._id },
+        { isKycVerified: true },
+        { new: true }
+      );
+      return res
+        .status(200)
+        .json({ success: true, message: "KYC has been verified successfully" });
+    } else {
+      if (!rejectionReason) {
+        return res.status(400).json({
+          success: false,
+          message: "Rejection reason is required when rejecting KYC.",
+        });
+      }
+
+      existingKycEntry.status = "Cancel";
+      existingKycEntry.rejectionReason = rejectionReason;
+      await existingKycEntry.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "KYC has been rejected.",
+      });
+    }
   } catch (err) {
     console.log(err);
     return res.status(200).json({

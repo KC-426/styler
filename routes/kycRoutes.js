@@ -8,6 +8,6 @@ router.route("/upload/kyc").post(partnerAuth, uploadKyc);
 router.route("/kyc/status").get(partnerAuth, kycStatus);
 router.route("/get/partner/kyc").get(partnerAuth, fetchPartnerKyc);
 router.route("/get/kyc/:kycDocId").get(partnerAuth, getKycDetails);
-router.route("/kyc/verification").get(partnerAuth, kycVerification);
+router.route("/kyc/verification").post(kycVerification);
 
 export default router;
