@@ -1,7 +1,6 @@
 import Partner from "../models/partnerModel.js";
 import KYC from "../models/kycModel.js";
 import { kycSchemaValidator } from "../validator/partnerKycValidator.js";
-import { exist } from "joi";
 
 export const uploadKyc = async (req, res) => {
   try {

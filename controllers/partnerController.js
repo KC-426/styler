@@ -6,7 +6,7 @@ dotenv.config({ path: "config/.env" });
 import nodemailer from "nodemailer";
 import { uploadUserProfileImageToFirebaseStorage } from "../utils/helperFunctions.js";
 import partnerValidatorSchema from "../validator/partnerValidator.js";
-import Otp from '../models/otpModel.js'
+import Otp from "../models/otpModel.js";
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -122,11 +122,11 @@ export async function completePartnerProfile(req, res) {
       address1,
       address2,
       landmark,
-      city, 
+      city,
       state,
       pincode,
       country,
-    } = trimmedBody; 
+    } = trimmedBody;
 
     // const imageFile = req.file;
     // if (!imageFile) {
@@ -155,7 +155,7 @@ export async function completePartnerProfile(req, res) {
     partner.address1 = address1;
     partner.address2 = address2;
     partner.landmark = landmark;
-    partner.city = city; 
+    partner.city = city;
     partner.state = state;
     partner.pincode = pincode;
     partner.country = country;
@@ -173,10 +173,10 @@ export async function completePartnerProfile(req, res) {
     await transporter.sendMail(mailOptions);
 
     const otpRecord = new Otp({
-      otp, 
-      partnerId: partner._id
-    })
-    await otpRecord.save()
+      otp,
+      partnerId: partner._id,
+    });
+    await otpRecord.save();
 
     await partner.save();
 
@@ -189,6 +189,28 @@ export async function completePartnerProfile(req, res) {
   }
 }
 
+export async function getAllPartners(req, res) {
+  try {
+    const partners = await Partner.find();
+
+    if (!partners || partners.length === 0) {
+      return res
+        .status(404)
+        .json({ success: false, message: "No partner found !" });
+    }
+
+    return res
+      .status(200)
+      .json({
+        success: true,
+        message: "Partners fetched successful!",
+        partners,
+      });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ message: "Internal Server Error!" });
+  }
+}
 
 export async function verifyEmail(req, res) {
   try {
@@ -200,19 +222,18 @@ export async function verifyEmail(req, res) {
     const { otp } = req.body;
     const partner = req.partner;
 
-    const dbOtp = await Otp.findOne({ partnerId: partner._id})
+    const dbOtp = await Otp.findOne({ partnerId: partner._id });
 
     if (!dbOtp) {
       return res.status(400).json({ message: "OTP not found or expired!" });
     }
-
 
     if (otp !== dbOtp.otp) {
       return res.status(400).json({ message: "Invalid OTP!" });
     }
 
     await partner.save();
-    await Otp.deleteOne({ partnerId: partner._id})
+    await Otp.deleteOne({ partnerId: partner._id });
 
     return res.status(200).json({ message: "Email verification successful!" });
   } catch (err) {
@@ -224,7 +245,7 @@ export async function verifyEmail(req, res) {
 export async function sendOtp(req, res) {
   try {
     const partner = req.partner;
-    console.log(partner)
+    console.log(partner);
 
     const otp = generateOtp();
 
@@ -255,7 +276,7 @@ export async function sendOtp(req, res) {
 export async function changepassword(req, res) {
   try {
     const partner = req.partner;
-    console.log(partner)
+    console.log(partner);
 
     const { newPassword, confirmpassword } = req.body;
 

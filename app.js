@@ -20,7 +20,8 @@ import testimonialRoutes from "./routes/testimonialRoutes.js";
 import blogRoutes from "./routes/blogsRoutes.js";
 import storageRoutes from "./routes/storageRoutes.js";
 import partnerRoutes from "./routes/partnerRoutes.js";
-import kycRoutes from './routes/kycRoutes.js'
+import kycRoutes from "./routes/kycRoutes.js";
+import membershipRoutes from "./routes/partnerMembership.js";
 
 app.use("/api/v1", userRoutes);
 app.use("/api/v1", contactUsRoutes);
@@ -30,7 +31,7 @@ app.use("/api/v1", blogRoutes);
 app.use("/api/v1", storageRoutes);
 app.use("/api/v1", partnerRoutes);
 app.use("/api/v1", kycRoutes);
-
+app.use("/api/v1", membershipRoutes);
 
 mongoose
   .connect(MONGODB_URI)
